@@ -96,91 +96,12 @@ button { font-family: inherit; cursor: pointer; }
   border: 1px solid var(--line);
   aspect-ratio: 16 / 9;
 }
-.player-wrap video, .player-wrap .poster {
+.player-wrap video {
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: #000;
   display: block;
-}
-.poster {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: saturate(0.85) contrast(1.05);
-}
-.poster::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 45%, transparent 70%);
-}
-.play-big {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 0;
-  z-index: 2;
-}
-.play-big i {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(7, 8, 12, 0.55);
-  border: 1px solid rgba(212, 168, 83, 0.45);
-  backdrop-filter: blur(8px);
-  color: var(--gold-2);
-  font-style: normal;
-  font-size: 28px;
-  padding-left: 4px;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-.play-big:hover i { transform: scale(1.06); background: rgba(212, 168, 83, 0.18); }
-
-.controls {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  z-index: 3;
-  padding: 10px 14px 12px;
-  background: linear-gradient(to top, rgba(0,0,0,0.82), transparent);
-  display: none;
-  gap: 10px;
-  align-items: center;
-}
-.player-wrap:hover .controls,
-.player-wrap.show-controls .controls { display: flex; }
-.ctrl {
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 14px;
-  padding: 4px 6px;
-}
-.bar {
-  flex: 1;
-  height: 4px;
-  background: rgba(255,255,255,0.18);
-  border-radius: 99px;
-  overflow: hidden;
-  cursor: pointer;
-}
-.bar > span {
-  display: block;
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--gold), var(--gold-2));
-}
-.time {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: #d7d9e0;
-  min-width: 92px;
-  text-align: right;
 }
 
 .meta {

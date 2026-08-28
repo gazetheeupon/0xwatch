@@ -1,15 +1,6 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   const vid = $("vid");
-  const poster = $("poster");
-  const playBig = $("playBig");
-  const playMini = $("playMini");
-  const fill = $("fill");
-  const clock = $("clock");
-  const mute = $("mute");
-  const fs = $("fs");
-  const seek = $("seek");
-  const stage = $("stage");
 
   const CHAT_URL = "https://oxwatch-chat.typical-impala.workers.dev/";
   const state = {
@@ -70,23 +61,15 @@
 
   function load(item, autoplay) {
     state.id = item.id;
-    vid.removeAttribute("src");
     vid.pause();
     vid.src = item.src;
     vid.poster = item.poster;
-    poster.style.backgroundImage = "url('" + item.poster + "'), url('./assets/hero.jpg')";
-    poster.style.display = "block";
     $("title").textContent = item.title;
     $("why").textContent = item.why + " · " + item.year + " · " + item.runtime;
     $("rights").textContent = item.rights;
     document.querySelectorAll(".card").forEach((c) => c.classList.toggle("on", c.dataset.id === item.id));
     joinRoom(item.id);
-    playBig.style.display = autoplay ? "none" : "grid";
-    if (autoplay) {
-      vid.play().catch(() => {
-        playBig.style.display = "grid";
-      });
-    }
+    if (autoplay) vid.play().catch(() => {});
   }
 
   function renderShelf() {
@@ -130,50 +113,9 @@
       state.session += dt;
       save();
     }
-    if (!vid.paused && vid.duration) {
-      fill.style.width = (vid.currentTime / vid.duration) * 100 + "%";
-      clock.textContent = clockfmt(vid.currentTime) + " / " + clockfmt(vid.duration);
-    }
-    playMini.textContent = vid.paused ? "▶" : "❚❚";
-    mute.textContent = vid.muted ? "muted" : "unmuted";
     paint();
     requestAnimationFrame(tick);
   }
-
-  function toggle() {
-    if (vid.paused) {
-      playBig.style.display = "none";
-      poster.style.display = "none";
-      vid.play().catch(() => {
-        playBig.style.display = "grid";
-      });
-    } else {
-      vid.pause();
-    }
-  }
-
-  playBig.addEventListener("click", toggle);
-  playMini.addEventListener("click", toggle);
-  vid.addEventListener("click", toggle);
-  vid.addEventListener("play", () => {
-    playBig.style.display = "none";
-    poster.style.display = "none";
-  });
-  vid.addEventListener("pause", () => {
-    if (vid.currentTime < 0.2) playBig.style.display = "grid";
-  });
-  mute.addEventListener("click", () => {
-    vid.muted = !vid.muted;
-  });
-  fs.addEventListener("click", () => {
-    if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
-    else document.exitFullscreen();
-  });
-  seek.addEventListener("click", (e) => {
-    if (!vid.duration) return;
-    const rct = seek.getBoundingClientRect();
-    vid.currentTime = ((e.clientX - rct.left) / rct.width) * vid.duration;
-  });
 
   function esc(s) {
     return String(s)
