@@ -52,26 +52,32 @@
         </div>
       </div>
 
-      <aside class="rail">
-        <p class="kicker" id="accrue">paused</p>
-        <div class="points" id="bigpts">0.00<em> pts</em></div>
-        <p class="status">Points stay <b>locked</b> until ad invoices clear. Nothing unlocks on hope.</p>
-        <div class="meter" title="vested against ad receipts"><span id="vestbar"></span></div>
-        <div class="stats">
-          <div class="stat"><label>Ad receipts</label><b id="ads">$0.00</b></div>
-          <div class="stat"><label>Unlocked</label><b id="unlocked">0.00</b></div>
-          <div class="stat"><label>Session</label><b id="sess">0:00</b></div>
-          <div class="stat"><label>Signal</label><b id="sig">idle</b></div>
-        </div>
-        <div class="adslot" id="adslot">
-          <div>
-            <strong>Inventory</strong>
-            Display unit for a crypto/CTV network (Bitmedia, Coinzilla, PropellerAds).
-            Fills after publisher approval. Vesting keys off their payout, not this counter.
+      <div class="lounge">
+        <aside class="rail slim">
+          <p class="kicker" id="accrue">paused</p>
+          <div class="points" id="bigpts">0.00<em> pts</em></div>
+          <p class="status">Locked until ad invoices clear.</p>
+          <div class="meter" title="vested against ad receipts"><span id="vestbar"></span></div>
+          <div class="stats">
+            <div class="stat"><label>Receipts</label><b id="ads">$0.00</b></div>
+            <div class="stat"><label>Unlocked</label><b id="unlocked">0.00</b></div>
+            <div class="stat"><label>Session</label><b id="sess">0:00</b></div>
+            <div class="stat"><label>Signal</label><b id="sig">idle</b></div>
           </div>
-        </div>
-        <p class="fine">One point per minute of play with this tab in the foreground. Mute cuts the rate. Backgrounded tabs mint nothing. The $1k treasury does not spray — it covers the first unlock when ads actually settle.</p>
-      </aside>
+        </aside>
+        <section class="chat" id="chat">
+          <div class="chat-head">
+            <h2>Lounge</h2>
+            <span id="chatroom">lobby</span>
+          </div>
+          <div class="log" id="log"></div>
+          <form class="composer" id="composer">
+            <input id="nick" maxlength="18" autocomplete="nickname" aria-label="Name">
+            <input id="draft" maxlength="280" placeholder="Say something in the dark…" autocomplete="off">
+            <button class="send" type="submit">Send</button>
+          </form>
+        </section>
+      </div>
     </section>
 
     <div class="shelf-head">

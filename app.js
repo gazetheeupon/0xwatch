@@ -11,6 +11,7 @@
   const seek = $("seek");
   const stage = $("stage");
 
+  const CHAT_URL = "https://oxwatch-chat.gazetheeupon.workers.dev/";
   const state = {
     id: null,
     unvested: Number(localStorage.getItem("ox_unvested") || 0),
@@ -18,8 +19,21 @@
     ads: Number(localStorage.getItem("ox_ads") || 0),
     session: 0,
     last: performance.now(),
-    accruing: false
+    accruing: false,
+    room: "lobby",
+    seen: 0
   };
+
+  if (!localStorage.getItem("ox_nick")) {
+    const n = "ox" + Math.random().toString(16).slice(2, 6);
+    localStorage.setItem("ox_nick", n);
+  }
+  $("nick").value = localStorage.getItem("ox_nick");
+  $("nick").addEventListener("change", () => {
+    const n = $("nick").value.replace(/[^\w\-.]/g, "").slice(0, 18);
+    $("nick").value = n;
+    localStorage.setItem("ox_nick", n);
+  });
 
   function fmt(n) {
     return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -66,6 +80,7 @@
     $("why").textContent = item.why + " · " + item.year + " · " + item.runtime;
     $("rights").textContent = item.rights;
     document.querySelectorAll(".card").forEach((c) => c.classList.toggle("on", c.dataset.id === item.id));
+    joinRoom(item.id);
     playBig.style.display = autoplay ? "none" : "grid";
     if (autoplay) {
       vid.play().catch(() => {
@@ -160,8 +175,75 @@
     vid.currentTime = ((e.clientX - rct.left) / rct.width) * vid.duration;
   });
 
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+  function renderMessages(messages) {
+    const log = $("log");
+    const stick = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+    log.innerHTML = "";
+    if (!messages.length) {
+      const d = document.createElement("div");
+      d.className = "msg";
+      d.innerHTML = "<span class=\"who sys\">0xwatch</span><span class=\"txt\">Empty lounge. First line is yours.</span>";
+      log.appendChild(d);
+      return;
+    }
+    messages.forEach((m) => {
+      const d = document.createElement("div");
+      d.className = "msg";
+      const when = new Date(m.t || Date.now());
+      const hh = String(when.getHours()).padStart(2, "0") + ":" + String(when.getMinutes()).padStart(2, "0");
+      d.innerHTML =
+        "<span class=\"who\">" + esc(m.nick) + "</span>" +
+        "<span class=\"txt\">" + esc(m.text) + "</span>" +
+        "<time>" + hh + "</time>";
+      log.appendChild(d);
+    });
+    if (stick) log.scrollTop = log.scrollHeight;
+  }
+  async function pullChat() {
+    try {
+      const r = await fetch(CHAT_URL + "?room=" + encodeURIComponent(state.room), { cache: "no-store" });
+      const data = await r.json();
+      if (data && data.messages) renderMessages(data.messages);
+      $("chatroom").textContent = state.room;
+    } catch {
+      $("chatroom").textContent = state.room + " · offline";
+    }
+  }
+  function joinRoom(id) {
+    state.room = id || "lobby";
+    $("chatroom").textContent = state.room;
+    pullChat();
+  }
+  $("composer").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("draft").value.trim();
+    const nick = $("nick").value.replace(/[^\w\-.]/g, "").slice(0, 18);
+    if (!text || !nick) return;
+    $("draft").value = "";
+    try {
+      const r = await fetch(CHAT_URL + "?room=" + encodeURIComponent(state.room), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nick, text })
+      });
+      const data = await r.json();
+      if (data && data.messages) renderMessages(data.messages);
+      else if (!data.ok) $("chatroom").textContent = data.error || "rejected";
+    } catch {
+      $("chatroom").textContent = state.room + " · offline";
+    }
+  });
+  setInterval(pullChat, 2500);
+
   renderShelf();
   load(window.OX_CATALOG[0], false);
   paint();
   requestAnimationFrame(tick);
 })();
+
