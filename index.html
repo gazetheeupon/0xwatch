@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>0xwatch — stay with the picture</title>
+  <meta name="description" content="Cinema that accrues points while you watch. Points unlock when advertisers actually pay.">
+  <link rel="canonical" href="https://gazetheeupon.github.io/0xwatch/">
+  <meta property="og:title" content="0xwatch">
+  <meta property="og:description" content="Stay with the picture. Points mint while you watch. They unlock when the ads settle.">
+  <meta property="og:image" content="./assets/hero.jpg">
+  <link rel="icon" href="./assets/mark.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;650&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <a class="brand" href="./">
+        <img src="./assets/mark.jpg" alt="">
+        <div class="word">0x<span>watch</span></div>
+      </a>
+      <div class="pills">
+        <div class="pill live" id="livepill"><strong>idle</strong> · no signal</div>
+        <div class="pill">unvested <strong id="pill-pts">0.00</strong></div>
+        <div class="pill">unlocked <strong id="pill-unl">0.00</strong></div>
+      </div>
+    </header>
+
+    <section class="stage">
+      <div>
+        <div class="player-wrap" id="stage">
+          <div class="poster" id="poster"></div>
+          <video id="vid" playsinline preload="metadata"></video>
+          <button class="play-big" id="playBig" type="button" aria-label="Play"><i>▶</i></button>
+          <div class="controls" id="controls">
+            <button class="ctrl" id="playMini" type="button">▶</button>
+            <div class="bar" id="seek"><span id="fill"></span></div>
+            <div class="time" id="clock">0:00 / 0:00</div>
+            <button class="ctrl" id="mute" type="button">unmuted</button>
+            <button class="ctrl" id="fs" type="button">full</button>
+          </div>
+        </div>
+        <div class="meta">
+          <div>
+            <h1 id="title">Select a title</h1>
+            <p id="why">Public-domain and Creative Commons pictures. No pirate feeds. The ticker only runs while this tab is visible and the film is actually playing.</p>
+          </div>
+          <div class="rights" id="rights"></div>
+        </div>
+      </div>
+
+      <aside class="rail">
+        <p class="kicker" id="accrue">paused</p>
+        <div class="points" id="bigpts">0.00<em> pts</em></div>
+        <p class="status">Points stay <b>locked</b> until ad invoices clear. Nothing unlocks on hope.</p>
+        <div class="meter" title="vested against ad receipts"><span id="vestbar"></span></div>
+        <div class="stats">
+          <div class="stat"><label>Ad receipts</label><b id="ads">$0.00</b></div>
+          <div class="stat"><label>Unlocked</label><b id="unlocked">0.00</b></div>
+          <div class="stat"><label>Session</label><b id="sess">0:00</b></div>
+          <div class="stat"><label>Signal</label><b id="sig">idle</b></div>
+        </div>
+        <div class="adslot" id="adslot">
+          <div>
+            <strong>Inventory</strong>
+            Display unit for a crypto/CTV network (Bitmedia, Coinzilla, PropellerAds).
+            Fills after publisher approval. Vesting keys off their payout, not this counter.
+          </div>
+        </div>
+        <p class="fine">One point per minute of play with this tab in the foreground. Mute cuts the rate. Backgrounded tabs mint nothing. The $1k treasury does not spray — it covers the first unlock when ads actually settle.</p>
+      </aside>
+    </section>
+
+    <div class="shelf-head">
+      <h2>On tonight</h2>
+      <span>Feature films in the public domain, plus Blender open movies</span>
+    </div>
+    <div class="shelf" id="shelf"></div>
+
+    <footer class="site">
+      <div>0xwatch · gazetheeupon · not a laptop process</div>
+      <div>Lightning <code>streamqa@coinos.io</code> · USDC Base <code>0x1e59553f1C9283CDE70e7d008602E24eac51E627</code></div>
+    </footer>
+  </div>
+  <script src="./catalog.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
