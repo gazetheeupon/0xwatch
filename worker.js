@@ -64,9 +64,49 @@ export class ChatRoom {
   }
 }
 
-export class ScoreCard {
+export class IpPool {
   constructor(ctx) {
     this.ctx = ctx;
+  }
+
+  async fetch(request) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: CORS });
+    }
+    if (request.method !== "POST") return json({ ok: false }, 405);
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ ok: false, error: "bad json" }, 400);
+    }
+    const sid = String(body.sid || "").slice(0, 64);
+    const want = Math.max(0, Number(body.want) || 0);
+    const now = Date.now();
+    let window = (await this.ctx.storage.get("w")) || [];
+    window = window.filter((x) => now - x.t < 60000);
+    const sids = new Set(window.map((x) => x.sid));
+    if (sid) sids.add(sid);
+    const n = Math.max(1, sids.size);
+    const used = window.reduce((s, x) => s + Number(x.a || 0), 0);
+    const cap = 1;
+    const share = want / n;
+    const allow = Math.max(0, Math.min(share, cap - used, want));
+    if (allow > 0 && sid) {
+      window.push({ t: now, a: allow, sid });
+      if (window.length > 400) window = window.slice(-300);
+      await this.ctx.storage.put("w", window);
+    } else {
+      await this.ctx.storage.put("w", window);
+    }
+    return json({ ok: true, allow, n });
+  }
+}
+
+export class ScoreCard {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
   }
 
   async fetch(request) {
@@ -115,6 +155,24 @@ export class ScoreCard {
       if (muted) rate = 0.25;
       creditMin = credited * rate / 60;
     }
+    const ipk = request.headers.get("X-Ox-Ip") || "";
+    const sid = request.headers.get("X-Ox-Sid") || "";
+    if (creditMin > 0 && ipk && this.env && this.env.IPPOOL) {
+      try {
+        const gate = this.env.IPPOOL.get(this.env.IPPOOL.idFromName(ipk));
+        const g = await gate.fetch(
+          new Request("https://ippool/admit", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ sid, want: creditMin }),
+          })
+        );
+        const admitted = await g.json();
+        if (typeof admitted.allow === "number") creditMin = Math.max(0, admitted.allow);
+      } catch (_) {
+        creditMin = 0;
+      }
+    }
     row.unvested = Number(row.unvested || 0) + creditMin;
     row.last = now;
     if (Number.isFinite(t)) row.lastT = t;
@@ -122,6 +180,11 @@ export class ScoreCard {
     await this.ctx.storage.put("row", row);
     return json(scorePayload(row));
   }
+}
+
+async function hashIp(ip) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("0xwatch:" + ip));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }
 
 export default {
@@ -133,8 +196,16 @@ export default {
     if (url.pathname === "/points" || url.pathname.endsWith("/points")) {
       const sid = (url.searchParams.get("id") || "").replace(/[^\w\-]/g, "").slice(0, 64);
       if (sid.length < 8) return json({ ok: false, error: "id" }, 400);
+      const rawIp =
+        request.headers.get("CF-Connecting-IP") ||
+        (request.headers.get("X-Forwarded-For") || "").split(",")[0].trim() ||
+        "unknown";
+      const ipk = await hashIp(rawIp);
+      const headers = new Headers(request.headers);
+      headers.set("X-Ox-Ip", ipk);
+      headers.set("X-Ox-Sid", sid);
       const stub = env.SCORE.idFromName(sid);
-      return env.SCORE.get(stub).fetch(request);
+      return env.SCORE.get(stub).fetch(new Request(request, { headers }));
     }
     const room = (url.searchParams.get("room") || "lobby").replace(/[^\w\-]/g, "").slice(0, 40) || "lobby";
     const id = env.CHAT_ROOM.idFromName(room);

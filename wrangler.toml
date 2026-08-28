@@ -6,6 +6,7 @@ compatibility_date = "2024-12-01"
 bindings = [
   { name = "CHAT_ROOM", class_name = "ChatRoom" },
   { name = "SCORE", class_name = "ScoreCard" },
+  { name = "IPPOOL", class_name = "IpPool" },
 ]
 
 [[migrations]]
@@ -15,3 +16,7 @@ new_sqlite_classes = ["ChatRoom"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["ScoreCard"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["IpPool"]
