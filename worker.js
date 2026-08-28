@@ -2,6 +2,7 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Max-Age": "86400",
 };
 
 function json(data, status = 200) {
@@ -12,8 +13,8 @@ function json(data, status = 200) {
 }
 
 export class ChatRoom {
-  constructor(state) {
-    this.state = state;
+  constructor(ctx) {
+    this.ctx = ctx;
   }
 
   async fetch(request) {
@@ -21,7 +22,7 @@ export class ChatRoom {
       return new Response(null, { headers: CORS });
     }
     if (request.method === "GET") {
-      const messages = (await this.state.storage.get("messages")) || [];
+      const messages = (await this.ctx.storage.get("messages")) || [];
       return json({ ok: true, messages });
     }
     if (request.method === "POST") {
@@ -40,14 +41,14 @@ export class ChatRoom {
         .slice(0, 280);
       if (!nick || nick.length < 2) return json({ ok: false, error: "nick" }, 400);
       if (!text) return json({ ok: false, error: "empty" }, 400);
-      const lastAt = Number((await this.state.storage.get("last:" + nick)) || 0);
+      const lastAt = Number((await this.ctx.storage.get("last:" + nick)) || 0);
       const now = Date.now();
       if (now - lastAt < 1500) return json({ ok: false, error: "slow down" }, 429);
-      const messages = (await this.state.storage.get("messages")) || [];
+      const messages = (await this.ctx.storage.get("messages")) || [];
       messages.push({ nick, text, t: now });
       while (messages.length > 120) messages.shift();
-      await this.state.storage.put("messages", messages);
-      await this.state.storage.put("last:" + nick, now);
+      await this.ctx.storage.put("messages", messages);
+      await this.ctx.storage.put("last:" + nick, now);
       return json({ ok: true, messages });
     }
     return json({ ok: false }, 405);

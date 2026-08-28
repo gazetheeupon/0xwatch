@@ -11,7 +11,7 @@
   const seek = $("seek");
   const stage = $("stage");
 
-  const CHAT_URL = "https://oxwatch-chat.gazetheeupon.workers.dev/";
+  const CHAT_URL = "https://oxwatch-chat.typical-impala.workers.dev/";
   const state = {
     id: null,
     unvested: Number(localStorage.getItem("ox_unvested") || 0),
