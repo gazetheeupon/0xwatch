@@ -3,11 +3,17 @@
   const vid = $("vid");
 
   const CHAT_URL = "https://oxwatch-chat.typical-impala.workers.dev/";
+  const POINTS_URL = CHAT_URL.replace(/\/?$/, "/") + "points";
+  if (!localStorage.getItem("ox_sid")) {
+    const sid = (crypto.randomUUID && crypto.randomUUID()) || ("id" + Math.random().toString(16).slice(2) + Date.now().toString(16));
+    localStorage.setItem("ox_sid", sid);
+  }
+  const SID = localStorage.getItem("ox_sid");
   const state = {
     id: null,
-    unvested: Number(localStorage.getItem("ox_unvested") || 0),
-    unlocked: Number(localStorage.getItem("ox_unlocked") || 0),
-    ads: Number(localStorage.getItem("ox_ads") || 0),
+    unvested: 0,
+    unlocked: 0,
+    ads: 0,
     session: 0,
     last: performance.now(),
     accruing: false,
@@ -34,11 +40,6 @@
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return m + ":" + String(s).padStart(2, "0");
-  }
-  function save() {
-    localStorage.setItem("ox_unvested", String(state.unvested));
-    localStorage.setItem("ox_unlocked", String(state.unlocked));
-    localStorage.setItem("ox_ads", String(state.ads));
   }
   function paint() {
     $("bigpts").innerHTML = fmt(state.unvested) + "<em> pts</em>";
@@ -97,22 +98,44 @@
       !document.hidden
     );
   }
-  function rate() {
-    if (!isLive()) return 0;
-    if (vid.muted || vid.volume < 0.05) return 0.25;
-    return 1;
-  }
 
+
+  function applyScore(data) {
+    if (!data || !data.ok) return;
+    state.unvested = Number(data.unvested || 0);
+    state.unlocked = Number(data.unlocked || 0);
+    state.ads = Number(data.ads || 0);
+    paint();
+  }
+  async function pullScore() {
+    try {
+      const r = await fetch(POINTS_URL + "?id=" + encodeURIComponent(SID), { cache: "no-store" });
+      applyScore(await r.json());
+    } catch (_) {}
+  }
+  async function heartbeat() {
+    const live = isLive();
+    state.accruing = live;
+    try {
+      const r = await fetch(POINTS_URL + "?id=" + encodeURIComponent(SID), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: state.id || "",
+          playing: live,
+          muted: !!(vid.muted || vid.volume < 0.05),
+          t: vid.currentTime || 0,
+          d: vid.duration || 0
+        })
+      });
+      applyScore(await r.json());
+    } catch (_) {}
+  }
   function tick(now) {
     const dt = Math.min(1, (now - state.last) / 1000);
     state.last = now;
-    const r = rate();
-    state.accruing = r > 0;
-    if (r > 0) {
-      state.unvested += (r * dt) / 60;
-      state.session += dt;
-      save();
-    }
+    state.accruing = isLive();
+    if (state.accruing) state.session += dt;
     paint();
     requestAnimationFrame(tick);
   }
@@ -182,9 +205,14 @@
     }
   });
   setInterval(pullChat, 2500);
+  setInterval(heartbeat, 4000);
+  document.addEventListener("visibilitychange", heartbeat);
+  vid.addEventListener("pause", heartbeat);
+  vid.addEventListener("play", heartbeat);
 
   renderShelf();
   load(window.OX_CATALOG[0], false);
+  pullScore();
   paint();
   requestAnimationFrame(tick);
 })();
