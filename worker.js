@@ -92,13 +92,9 @@ export class IpPool {
     const cap = 1;
     const share = want / n;
     const allow = Math.max(0, Math.min(share, cap - used, want));
-    if (allow > 0 && sid) {
-      window.push({ t: now, a: allow, sid });
-      if (window.length > 400) window = window.slice(-300);
-      await this.ctx.storage.put("w", window);
-    } else {
-      await this.ctx.storage.put("w", window);
-    }
+    if (sid) window.push({ t: now, a: allow, sid });
+    if (window.length > 400) window = window.slice(-300);
+    await this.ctx.storage.put("w", window);
     return json({ ok: true, allow, n });
   }
 }
